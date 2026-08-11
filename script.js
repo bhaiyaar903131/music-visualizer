@@ -1,0 +1,14 @@
+var scene;
+var camera;
+var renderer;
+var controls;
+var analyser;
+var audioContext;
+var sourceNode;
+var dataArray;
+var bars = [];
+var floatingShapes = [];
+var animationFrame = null;
+var audioPlayer = document.getElementById('audioPlayer');
+var fileUpload = document.getElementById('audioFile');
+var visualizer = document.getElementById('visualizer');
