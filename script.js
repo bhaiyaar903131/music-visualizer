@@ -53,6 +53,46 @@ function renderStillFrame() {
 createScene();
 renderStillFrame();
 
+function createLights() {
+    var ambientLight = new THREE.AmbientLight(0x505050);
+    scene.add(ambientLight);
+
+    var lightOne = new THREE.DirectionalLight(0xffffff, 0.7);
+    lightOne.position.set(0, 1, 1);
+    scene.add(lightOne);
+
+    var lightTwo = new THREE.DirectionalLight(0xffffff, 0.7);
+    lightTwo.position.set(1, 1, 0);
+    scene.add(lightTwo);
+
+    var lightThree = new THREE.DirectionalLight(0xffffff, 0.7);
+    lightThree.position.set(0, -1, -1);
+    scene.add(lightThree);
+
+    var lightFour = new THREE.DirectionalLight(0xffffff, 0.7);
+    lightFour.position.set(-1, -1, 0);
+    scene.add(lightFour);
+}
+
+function createFloorGuide() {
+    var guideGeometry = new THREE.PlaneGeometry(70, 270);
+    var guideMaterial = new THREE.MeshBasicMaterial({
+        color: 0x030303,
+        transparent: true,
+        opacity: 0.12,
+        side: THREE.DoubleSide
+    });
+    var guide = new THREE.Mesh(guideGeometry, guideMaterial);
+    guide.rotation.x = -Math.PI / 2;
+    guide.position.y = -1;
+    guide.position.z = 95;
+    scene.add(guide);
+}
+
+createLights();
+createFloorGuide();
+renderStillFrame();
+
 function removeOldCanvas() {
     var oldCanvas = visualizer.querySelector('canvas');
     if (oldCanvas && oldCanvas !== renderer.domElement) {
@@ -93,3 +133,42 @@ function prepareSceneView() {
 
 prepareSceneView();
 renderStillFrame();
+
+function setCameraLens(fieldOfView, nearPlane, farPlane) {
+    camera.fov = fieldOfView;
+    camera.near = nearPlane;
+    camera.far = farPlane;
+    camera.updateProjectionMatrix();
+}
+
+function setOrbitBehavior() {
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = 2;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enablePan = true;
+    controls.enableZoom = true;
+}
+
+function faceCameraTowardBars() {
+    var target = new THREE.Vector3(0, 0, 95);
+    camera.lookAt(target);
+    controls.target.copy(target);
+    controls.update();
+}
+
+function prepareCameraAndControls() {
+    setCameraLens(65, 1, 1000);
+    setOrbitBehavior();
+    faceCameraTowardBars();
+}
+
+prepareCameraAndControls();
+renderStillFrame();
+
+function resetCameraHome() {
+    camera.position.set(32, 50, 50);
+    controls.target.set(0, 0, 95);
+    camera.lookAt(controls.target);
+    controls.update();
+}
