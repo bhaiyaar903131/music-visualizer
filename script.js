@@ -351,6 +351,55 @@ function createGui() {
 fillPreviousSongs();
 createGui();
 
+function handleResize() {
+    if (!camera || !renderer) {
+        return;
+    }
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function unlockOnInteraction() {
+    var events = ['touchstart', 'touchend', 'mousedown', 'keydown'];
+
+    function unlock() {
+        resumeAudioContext();
+        for (var index = 0; index < events.length; index += 1) {
+            document.body.removeEventListener(events[index], unlock);
+        }
+    }
+
+    for (var index = 0; index < events.length; index += 1) {
+        document.body.addEventListener(events[index], unlock, false);
+    }
+}
+
+function keepPlayerUsable() {
+    audioPlayer.setAttribute('preload', 'metadata');
+    audioPlayer.setAttribute('controlsList', 'nodownload');
+}
+
+function handleAudioEnded() {
+    resetBars();
+}
+
+function handleAudioPause() {
+    if (audioPlayer.currentTime === 0 || audioPlayer.ended) {
+        resetBars();
+    }
+}
+
+window.addEventListener('resize', handleResize, false);
+audioPlayer.addEventListener('ended', handleAudioEnded);
+audioPlayer.addEventListener('pause', handleAudioPause);
+
+keepPlayerUsable();
+unlockOnInteraction();
+handleResize();
+
 function removeOldCanvas() {
     var oldCanvas = visualizer.querySelector('canvas');
     if (oldCanvas && oldCanvas !== renderer.domElement) {
@@ -565,6 +614,21 @@ function openGuiOnDesktop() {
 }
 
 closeGuiOnSmallScreens();
+
+function handleBeforeUnload() {
+    releaseCurrentObjectUrl();
+}
+
+function refreshResponsiveControls() {
+    if (window.innerWidth <= 760) {
+        closeGuiOnSmallScreens();
+    } else {
+        openGuiOnDesktop();
+    }
+}
+
+window.addEventListener('beforeunload', handleBeforeUnload);
+window.addEventListener('resize', refreshResponsiveControls);
 
 function resetCameraHome() {
     camera.position.set(32, 50, 50);

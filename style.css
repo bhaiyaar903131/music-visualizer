@@ -131,3 +131,26 @@ body::-webkit-scrollbar,
 .dg.ac {
     z-index: 99999 !important;
 }
+
+@media (max-width: 760px) {
+    #past-songs {
+        width: 210px;
+        height: 45vh;
+    }
+
+    #prevSongs {
+        padding-left: 2.7em;
+        font-size: 0.9rem;
+    }
+
+    .dg.ac {
+        transform: scale(0.9);
+        transform-origin: top right;
+    }
+}
+
+@media (max-height: 520px) {
+    #past-songs {
+        height: 40vh;
+    }
+}
