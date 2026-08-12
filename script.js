@@ -143,6 +143,54 @@ createBars();
 centerCameraOnBars();
 renderStillFrame();
 
+function createFloatingShapes() {
+    floatingShapes = [];
+
+    var geometry = new THREE.TetrahedronGeometry(Math.random() + 0.5, 2);
+    var material = new THREE.MeshPhongMaterial({
+        color: Math.random() * 0xffffff,
+        flatShading: true
+    });
+
+    for (var index = 0; index < 1000; index += 1) {
+        var shape = new THREE.Mesh(geometry, material);
+        shape.position.x = (Math.random() - 0.5) * 300;
+        shape.position.y = (Math.random() - 0.5) * 300;
+        shape.position.z = (Math.random() - 0.5) * 300;
+        shape.scale.x = 0.5 + Math.random() * 1.5;
+        shape.scale.y = 0.5 + Math.random() * 1.5;
+        shape.scale.z = 0.5 + Math.random() * 1.5;
+        shape.rotation.set(
+            Math.random() * 4,
+            Math.random() * 4,
+            Math.random() * 4
+        );
+        scene.add(shape);
+        floatingShapes.push(shape);
+    }
+}
+
+function rotateFloatingShapes() {
+    for (var index = 0; index < floatingShapes.length; index += 1) {
+        var shape = floatingShapes[index];
+        shape.rotation.z += 0.02;
+    }
+}
+
+function tintSceneFromEnergy(energy) {
+    if (!bars.length || !bars[0].length) {
+        return;
+    }
+
+    var material = bars[0][0].material;
+    var hue = (0.58 + energy * 0.22) % 1;
+    var lightness = 0.42 + energy * 0.18;
+    material.color.setHSL(hue, 0.72, lightness);
+}
+
+createFloatingShapes();
+renderStillFrame();
+
 function removeOldCanvas() {
     var oldCanvas = visualizer.querySelector('canvas');
     if (oldCanvas && oldCanvas !== renderer.domElement) {
@@ -245,9 +293,41 @@ function prepareBarField() {
 prepareBarField();
 renderStillFrame();
 
+function randomRange(minimum, maximum) {
+    return minimum + Math.random() * (maximum - minimum);
+}
+
+function setShapeRotation(shape) {
+    shape.rotation.x = randomRange(0, 4);
+    shape.rotation.y = randomRange(0, 4);
+    shape.rotation.z = randomRange(0, 4);
+}
+
+function setShapeScale(shape) {
+    shape.scale.x = randomRange(0.5, 2);
+    shape.scale.y = randomRange(0.5, 2);
+    shape.scale.z = randomRange(0.5, 2);
+}
+
+function setShapePosition(shape) {
+    shape.position.x = randomRange(-150, 150);
+    shape.position.y = randomRange(-150, 150);
+    shape.position.z = randomRange(-150, 150);
+}
+
+function refreshFloatingShape(shape) {
+    setShapePosition(shape);
+    setShapeScale(shape);
+    setShapeRotation(shape);
+}
+
 function resetCameraHome() {
     camera.position.set(32, 50, 50);
     controls.target.set(0, 0, 95);
     camera.lookAt(controls.target);
     controls.update();
+}
+
+function getFloatingShapeCount() {
+    return floatingShapes.length;
 }
