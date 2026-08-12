@@ -191,6 +191,60 @@ function tintSceneFromEnergy(energy) {
 createFloatingShapes();
 renderStillFrame();
 
+function ensureAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.78;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+    }
+
+    if (!sourceNode) {
+        sourceNode = audioContext.createMediaElementSource(audioPlayer);
+        sourceNode.connect(analyser);
+        analyser.connect(audioContext.destination);
+    }
+}
+
+function resumeAudioContext() {
+    ensureAudioContext();
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+}
+
+function loadAudioSource(url, title) {
+    resumeAudioContext();
+    audioPlayer.pause();
+    audioPlayer.src = url;
+    audioPlayer.dataset.title = title || 'Uploaded song';
+    audioPlayer.load();
+}
+
+function loadUploadedFile(file) {
+    if (!file) {
+        return;
+    }
+
+    var objectUrl = URL.createObjectURL(file);
+    loadAudioSource(objectUrl, file.name);
+    addPreviousSong(file.name, objectUrl, true);
+    audioPlayer.play().catch(function () {});
+}
+
+fileUpload.addEventListener('change', function (event) {
+    var files = event.target.files;
+    if (!files || !files.length) {
+        return;
+    }
+    loadUploadedFile(files[0]);
+});
+
+audioPlayer.addEventListener('play', function () {
+    resumeAudioContext();
+});
+
 function removeOldCanvas() {
     var oldCanvas = visualizer.querySelector('canvas');
     if (oldCanvas && oldCanvas !== renderer.domElement) {
@@ -319,6 +373,31 @@ function refreshFloatingShape(shape) {
     setShapePosition(shape);
     setShapeScale(shape);
     setShapeRotation(shape);
+}
+
+var currentObjectUrl = null;
+
+function releaseCurrentObjectUrl() {
+    if (!currentObjectUrl) {
+        return;
+    }
+    URL.revokeObjectURL(currentObjectUrl);
+    currentObjectUrl = null;
+}
+
+function makeObjectUrl(file) {
+    releaseCurrentObjectUrl();
+    currentObjectUrl = URL.createObjectURL(file);
+    return currentObjectUrl;
+}
+
+function setPlayerTitle(title) {
+    audioPlayer.dataset.title = title || 'Uploaded song';
+    audioPlayer.setAttribute('aria-label', audioPlayer.dataset.title);
+}
+
+function clearFileInput() {
+    fileUpload.value = '';
 }
 
 function resetCameraHome() {
