@@ -245,6 +245,59 @@ audioPlayer.addEventListener('play', function () {
     resumeAudioContext();
 });
 
+function getAverageEnergy() {
+    if (!dataArray || !dataArray.length) {
+        return 0;
+    }
+
+    var total = 0;
+    for (var index = 0; index < dataArray.length; index += 1) {
+        total += dataArray[index];
+    }
+    return total / dataArray.length / 255;
+}
+
+function updateBars() {
+    if (!analyser || !dataArray) {
+        return;
+    }
+
+    analyser.getByteFrequencyData(dataArray);
+
+    var frequencyIndex = 0;
+    for (var row = 0; row < bars.length; row += 1) {
+        for (var column = 0; column < bars[row].length; column += 1) {
+            var value = dataArray[frequencyIndex] || 0;
+            var scale = value / 10;
+            bars[row][column].scale.y = scale < 1 ? 1 : scale;
+            frequencyIndex += frequencyIndex < dataArray.length - 1 ? 1 : 0;
+        }
+    }
+
+    tintSceneFromEnergy(getAverageEnergy());
+}
+
+function animate() {
+    animationFrame = requestAnimationFrame(animate);
+
+    if (analyser && !audioPlayer.paused) {
+        updateBars();
+    }
+
+    rotateFloatingShapes();
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+function startAnimation() {
+    if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+    }
+    animate();
+}
+
+startAnimation();
+
 function removeOldCanvas() {
     var oldCanvas = visualizer.querySelector('canvas');
     if (oldCanvas && oldCanvas !== renderer.domElement) {
@@ -398,6 +451,34 @@ function setPlayerTitle(title) {
 
 function clearFileInput() {
     fileUpload.value = '';
+}
+
+function clamp(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(maximum, value));
+}
+
+function frequencyToScale(value) {
+    var scale = value / 10;
+    return scale < 1 ? 1 : scale;
+}
+
+function getFrequencyValue(index) {
+    if (!dataArray || !dataArray.length) {
+        return 0;
+    }
+    return dataArray[clamp(index, 0, dataArray.length - 1)] || 0;
+}
+
+function getBassEnergy() {
+    if (!dataArray || !dataArray.length) {
+        return 0;
+    }
+    var limit = Math.min(16, dataArray.length);
+    var total = 0;
+    for (var index = 0; index < limit; index += 1) {
+        total += dataArray[index];
+    }
+    return total / limit / 255;
 }
 
 function resetCameraHome() {
