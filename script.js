@@ -298,6 +298,59 @@ function startAnimation() {
 
 startAnimation();
 
+var gui;
+var previousSongs = [
+    {
+        title: 'Smooth Operator',
+        url: 'https://firebasestorage.googleapis.com/v0/b/kantelabs-threejs.appspot.com/o/03%20-%20Smooth%20Operator.mp3?alt=media&token=27e95f4c-b4fb-4160-9bdc-02833cf65a84'
+    }
+];
+
+function addPreviousSong(title, url, temporary) {
+    var list = document.getElementById('prevSongs');
+    var item = document.createElement('li');
+    var label = document.createElement('p');
+
+    label.textContent = title.replace(/\.[^/.]+$/, '');
+    label.dataset.url = url;
+    label.dataset.temporary = temporary ? 'true' : 'false';
+    item.appendChild(label);
+    list.appendChild(item);
+
+    item.addEventListener('click', function () {
+        loadAudioSource(label.dataset.url, label.textContent);
+        audioPlayer.play().catch(function () {});
+    });
+}
+
+function fillPreviousSongs() {
+    for (var index = 0; index < previousSongs.length; index += 1) {
+        var song = previousSongs[index];
+        addPreviousSong(song.title, song.url, false);
+    }
+}
+
+function createGui() {
+    if (gui) {
+        gui.destroy();
+    }
+
+    gui = new dat.GUI({
+        width: 245
+    });
+
+    var cameraFolder = gui.addFolder('Camera');
+    cameraFolder.add(controls, 'autoRotate');
+    cameraFolder.add(controls, 'autoRotateSpeed', 0, 10).step(0.5);
+    cameraFolder.add(camera.position, 'x', -500, 500).step(5);
+    cameraFolder.add(camera.position, 'y', -500, 500).step(5);
+    cameraFolder.add(camera.position, 'z', -500, 500).step(5);
+    cameraFolder.open();
+}
+
+fillPreviousSongs();
+createGui();
+
 function removeOldCanvas() {
     var oldCanvas = visualizer.querySelector('canvas');
     if (oldCanvas && oldCanvas !== renderer.domElement) {
@@ -481,6 +534,38 @@ function getBassEnergy() {
     return total / limit / 255;
 }
 
+function getSongLabels() {
+    return document.querySelectorAll('#prevSongs p');
+}
+
+function clearSelectedSong() {
+    var labels = getSongLabels();
+    for (var index = 0; index < labels.length; index += 1) {
+        labels[index].removeAttribute('data-selected');
+    }
+}
+
+function selectSongLabel(label) {
+    clearSelectedSong();
+    label.dataset.selected = 'true';
+}
+
+function closeGuiOnSmallScreens() {
+    if (!gui || window.innerWidth > 760) {
+        return;
+    }
+    gui.close();
+}
+
+function openGuiOnDesktop() {
+    if (!gui || window.innerWidth <= 760) {
+        return;
+    }
+    gui.open();
+}
+
+closeGuiOnSmallScreens();
+
 function resetCameraHome() {
     camera.position.set(32, 50, 50);
     controls.target.set(0, 0, 95);
@@ -491,3 +576,6 @@ function resetCameraHome() {
 function getFloatingShapeCount() {
     return floatingShapes.length;
 }
+
+audioPlayer.crossOrigin = 'anonymous';
+loadAudioSource(previousSongs[0].url, previousSongs[0].title);
