@@ -93,6 +93,56 @@ createLights();
 createFloorGuide();
 renderStillFrame();
 
+function createBars() {
+    bars = [];
+
+    var geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+    var material = new THREE.MeshPhongMaterial({
+        color: Math.random() * 0xffffff,
+        flatShading: false,
+        specular: 0xffffff,
+        shininess: 14,
+        reflectivity: 2,
+        fog: false
+    });
+
+    var rowIndex = 0;
+    for (var z = 0; z <= 256; z += 2) {
+        bars[rowIndex] = [];
+
+        var columnIndex = 0;
+        for (var x = 0; x <= 62; x += 2) {
+            var bar = new THREE.Mesh(geometry, material);
+            bar.position.x = x - 30;
+            bar.position.y = 0;
+            bar.position.z = z;
+            scene.add(bar);
+            bars[rowIndex][columnIndex] = bar;
+            columnIndex += 1;
+        }
+
+        rowIndex += 1;
+    }
+}
+
+function resetBars() {
+    for (var row = 0; row < bars.length; row += 1) {
+        for (var column = 0; column < bars[row].length; column += 1) {
+            bars[row][column].scale.y = 1;
+        }
+    }
+}
+
+function centerCameraOnBars() {
+    controls.target.set(0, 0, 95);
+    camera.lookAt(controls.target);
+    controls.update();
+}
+
+createBars();
+centerCameraOnBars();
+renderStillFrame();
+
 function removeOldCanvas() {
     var oldCanvas = visualizer.querySelector('canvas');
     if (oldCanvas && oldCanvas !== renderer.domElement) {
@@ -164,6 +214,35 @@ function prepareCameraAndControls() {
 }
 
 prepareCameraAndControls();
+renderStillFrame();
+
+function forEachBar(callback) {
+    for (var row = 0; row < bars.length; row += 1) {
+        for (var column = 0; column < bars[row].length; column += 1) {
+            callback(bars[row][column], row, column);
+        }
+    }
+}
+
+function setEveryBarHeight(height) {
+    forEachBar(function (bar) {
+        bar.scale.y = height;
+    });
+}
+
+function getBarMaterial() {
+    if (!bars.length || !bars[0].length) {
+        return null;
+    }
+    return bars[0][0].material;
+}
+
+function prepareBarField() {
+    setEveryBarHeight(1);
+    centerCameraOnBars();
+}
+
+prepareBarField();
 renderStillFrame();
 
 function resetCameraHome() {
